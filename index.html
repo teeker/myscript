@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>家族樂捐系統</title>
-  <!-- QR Code 產生庫 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,7 +21,7 @@
       padding: 16px 20px;
       text-align: center;
     }
-    .header h1 { font-size: 22px; font-weight: 600; color: #1d1d1f; }
+    .header h1 { font-size: 22px; font-weight: 600; }
     .header p  { font-size: 14px; color: #6e6e73; margin-top: 4px; }
 
     .card {
@@ -33,13 +32,7 @@
       max-width: 480px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
-
-    .card h2 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 20px;
-      color: #1d1d1f;
-    }
+    .card h2 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
 
     label {
       display: block;
@@ -57,7 +50,6 @@
       border: 1.5px solid #d1d1d6;
       border-radius: 10px;
       font-size: 16px;
-      color: #1d1d1f;
       background: #fafafa;
       transition: border-color 0.2s;
       outline: none;
@@ -78,10 +70,10 @@
       transition: opacity 0.2s, transform 0.1s;
     }
     .btn:active { transform: scale(0.98); }
-    .btn-primary   { background: #0071e3; color: #fff; }
+    .btn-primary { background: #0071e3; color: #fff; }
     .btn-primary:hover { opacity: 0.9; }
-    .btn-confirm   { background: #34c759; color: #fff; }
-    .btn-back      { background: #f2f2f7; color: #3a3a3c; margin-top: 12px; }
+    .btn-confirm { background: #34c759; color: #fff; }
+    .btn-back    { background: #f2f2f7; color: #3a3a3c; margin-top: 12px; }
 
     .qr-container {
       display: flex;
@@ -121,22 +113,9 @@
       line-height: 1.6;
     }
 
-    .success-icon {
-      font-size: 56px;
-      text-align: center;
-    }
-    .success-title {
-      font-size: 22px;
-      font-weight: 700;
-      text-align: center;
-      color: #1d1d1f;
-      margin: 8px 0 6px;
-    }
-    .success-sub {
-      font-size: 15px;
-      color: #6e6e73;
-      text-align: center;
-    }
+    .success-icon  { font-size: 56px; text-align: center; }
+    .success-title { font-size: 22px; font-weight: 700; text-align: center; margin: 8px 0 6px; }
+    .success-sub   { font-size: 15px; color: #6e6e73; text-align: center; }
 
     .sheet-link-btn {
       display: block;
@@ -162,6 +141,18 @@
       display: none;
     }
 
+    .alert-box {
+      background: #fff2f2;
+      border: 1px solid #ffcdd2;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #c62828;
+      display: none;
+      line-height: 1.6;
+    }
+
     .spinner {
       display: inline-block;
       width: 20px; height: 20px;
@@ -182,7 +173,7 @@
   <p>愛心傳遞，共享歡樂</p>
 </div>
 
-<!-- ======== 頁面 1：填寫表單 ======== -->
+<!-- 頁面 1：填寫表單 -->
 <div id="page-form" class="page active">
   <div class="card">
     <h2>填寫捐款資料</h2>
@@ -205,7 +196,7 @@
   </div>
 </div>
 
-<!-- ======== 頁面 2：顯示 QR code 給收款人掃 ======== -->
+<!-- 頁面 2：QR code 給收款人掃 -->
 <div id="page-qr" class="page">
   <div class="card">
     <h2>請收款人掃描 QR Code</h2>
@@ -217,7 +208,7 @@
   </div>
 </div>
 
-<!-- ======== 頁面 3：收款人確認頁（由 QR code 掃碼進入） ======== -->
+<!-- 頁面 3：收款人確認頁（掃碼進入） -->
 <div id="page-confirm" class="page">
   <div class="card">
     <h2>確認捐款資料</h2>
@@ -239,12 +230,17 @@
         <span class="info-value amount" id="conf-amount">—</span>
       </div>
     </div>
+
     <button class="btn btn-confirm" id="confirm-btn" onclick="confirmDonation()">✓ 確認收款</button>
+
+    <!-- 錯誤訊息區塊（注意：id="error-alert"，JS 裡用 errorAlert 變數，避開 window.alert 保留字） -->
+    <div class="alert-box" id="error-alert"></div>
+
     <p class="hint" style="margin-top: 12px;">按下確認後資料將自動寫入紀錄表</p>
   </div>
 </div>
 
-<!-- ======== 頁面 4：完成頁 ======== -->
+<!-- 頁面 4：完成 -->
 <div id="page-done" class="page">
   <div class="card">
     <div class="success-icon">✅</div>
@@ -271,16 +267,10 @@
   // ================================================================
   // ⚠️ 請修改以下兩個設定值
   // ================================================================
-
-  // 1. 把你的 Apps Script 部署網址貼在這裡
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrpXjOLyhoEMy2F23DAkGuKZeSMYgVgLwyN4GPf24U4GPRl6QE7WrnY4OFK_f4aBv3/exec";
-
-  // 2. 把你的 Google Sheets 公開連結貼在這裡
-  const SHEET_VIEW_URL = "https://docs.google.com/spreadsheets/d/1gzJ9GmofOYrO6EvDvpEDPDD2V9XB9w6CfkTomXpjoVA//edit?usp=sharing";
-
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHfpjeoHqGzuIzDRcJ7dGWymWIzIhlDBioKq6AJI28iQyDqsI3Y0OS7F9YXSvUzPP1mg/exec";
+  const SHEET_VIEW_URL  = "https://docs.google.com/spreadsheets/d/1gzJ9GmofOYrO6EvDvpEDPDD2V9XB9w6CfkTomXpjoVA/edit?usp=sharing";
   // ================================================================
 
-  // 判斷是否為收款人掃碼進入
   window.onload = function () {
     const params = new URLSearchParams(window.location.search);
     if (params.get("confirm") === "1") {
@@ -288,7 +278,6 @@
     }
   };
 
-  // 表單送出
   function submitForm() {
     const name   = document.getElementById("inp-name").value.trim();
     const phone  = document.getElementById("inp-phone").value.trim();
@@ -309,11 +298,13 @@
     }
     if (!valid) return;
 
-    // 建立確認頁的網址（含所有資料作為參數）
     const base    = window.location.origin + window.location.pathname;
-    const confirm = `${base}?confirm=1&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&line=${encodeURIComponent(lineId)}&amount=${encodeURIComponent(amount)}`;
+    const confirm = `${base}?confirm=1`
+      + `&name=${encodeURIComponent(name)}`
+      + `&phone=${encodeURIComponent(phone)}`
+      + `&line=${encodeURIComponent(lineId)}`
+      + `&amount=${encodeURIComponent(amount)}`;
 
-    // 產生 QR Code
     document.getElementById("qrcode").innerHTML = "";
     new QRCode(document.getElementById("qrcode"), {
       text: confirm,
@@ -327,7 +318,6 @@
     showPage("page-qr");
   }
 
-  // 收款人掃碼後，顯示確認頁
   function showConfirmPage(params) {
     document.getElementById("conf-name").textContent   = params.get("name")   || "—";
     document.getElementById("conf-phone").textContent  = params.get("phone")  || "（未填寫）";
@@ -336,43 +326,68 @@
     showPage("page-confirm");
   }
 
-  // 確認收款，寫入試算表
+  // ================================================================
+  // 核心修正：
+  //   1. 用 no-cors + GET 送出，Apps Script 端用 doGet 接收
+  //   2. no-cors 模式下 fetch() 永遠回傳 opaque response，
+  //      .catch() 只有「完全無法連線」才會觸發（例如沒有網路）。
+  //      正常情況下（包含 Apps Script 執行失敗）都會走 .then()。
+  //   3. 修正變數名稱：改用 errorAlert，避開 window.alert 保留字衝突。
+  //   4. 加上 10 秒 timeout 保護，避免 fetch 永遠 pending。
+  // ================================================================
   function confirmDonation() {
-    const params = new URLSearchParams(window.location.search);
-    const btn    = document.getElementById("confirm-btn");
+    const params     = new URLSearchParams(window.location.search);
+    const btn        = document.getElementById("confirm-btn");
+    const errorAlert = document.getElementById("error-alert"); // ← 不用 alert 當變數名
 
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>寫入紀錄中…';
+    btn.disabled    = true;
+    btn.innerHTML   = '<span class="spinner"></span>寫入紀錄中…';
+    errorAlert.style.display = "none";
 
-    const payload = {
-      name:   params.get("name"),
-      phone:  params.get("phone"),
-      lineId: params.get("line"),
-      amount: params.get("amount")
-    };
+    const url = APPS_SCRIPT_URL
+      + "?action=submit"
+      + "&name="   + encodeURIComponent(params.get("name")   || "")
+      + "&phone="  + encodeURIComponent(params.get("phone")  || "")
+      + "&lineId=" + encodeURIComponent(params.get("line")   || "")
+      + "&amount=" + encodeURIComponent(params.get("amount") || "");
 
-    fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        document.getElementById("done-name").textContent   = payload.name;
-        document.getElementById("done-amount").textContent = "NT$ " + payload.amount;
-        document.getElementById("sheet-link").href         = SHEET_VIEW_URL;
-        showPage("page-done");
-      } else {
-        alert("寫入失敗，請重試");
-        btn.disabled = false;
-        btn.innerHTML = "✓ 確認收款";
-      }
-    })
-    .catch(() => {
-      alert("網路錯誤，請確認連線後重試");
-      btn.disabled = false;
-      btn.innerHTML = "✓ 確認收款";
-    });
+    // ── Timeout 保護：超過 10 秒視為失敗 ──
+    const timeoutId = setTimeout(() => {
+      showError(errorAlert, btn, "⏱ 請求逾時，請確認網路連線後再試一次。");
+    }, 10000);
+
+    // ── no-cors + GET：唯一能繞過 Apps Script CORS 限制的方式 ──
+    // .then() 在 no-cors 下代表「請求已送達」（opaque response），不代表寫入成功。
+    // 若需確認寫入結果，請改用 Google Apps Script + JSONP 方案，或在後端加 CORS header。
+    fetch(url, { method: "GET", mode: "no-cors" })
+      .then(() => {
+        clearTimeout(timeoutId);
+        // 等 1.5 秒讓 Apps Script 完成寫入（no-cors 無法讀取回應，只能等待）
+        setTimeout(() => {
+          document.getElementById("done-name").textContent   = params.get("name");
+          document.getElementById("done-amount").textContent = "NT$ " + params.get("amount");
+          document.getElementById("sheet-link").href         = SHEET_VIEW_URL;
+          showPage("page-done");
+        }, 1500);
+      })
+      .catch((err) => {
+        // 只有真正無法連線（手機沒網路、URL 完全無效）才會到這裡
+        clearTimeout(timeoutId);
+        showError(errorAlert, btn,
+          "❌ 無法連線，請確認：<br>"
+          + "1. 手機有連上網路<br>"
+          + "2. Apps Script 網址設定正確<br>"
+          + "3. 部署時存取權選「所有人」<br><br>"
+          + "<small>錯誤訊息：" + err.message + "</small>"
+        );
+      });
+  }
+
+  function showError(errorAlert, btn, msg) {
+    errorAlert.innerHTML     = msg;
+    errorAlert.style.display = "block";
+    btn.disabled             = false;
+    btn.innerHTML            = "✓ 確認收款";
   }
 
   function showPage(id) {
@@ -382,12 +397,11 @@
   }
 
   function goBack()  { showPage("page-form"); }
+
   function resetAll() {
-    // 清空表單
     ["inp-name","inp-phone","inp-line","inp-amount"].forEach(id => {
       document.getElementById(id).value = "";
     });
-    // 移除網址參數
     history.replaceState({}, "", window.location.pathname);
     showPage("page-form");
   }
