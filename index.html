@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AKfycbyHfpjeoHqGzuIzDRcJ7dGWymWIzIhlDBioKq6AJI28iQyDqsI3Y0OS7F9YXSvUzPP1mg</title>
+  <title>家族樂捐系統</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -183,7 +183,7 @@
     <div class="error-msg" id="err-name">請填寫姓名</div>
 
     <label>手機號碼</label>
-    <input type="tel" id="inp-phone" placeholder="09xx-xxxAKfycbyHfpjeoHqGzuIzDRcJ7dGWymWIzIhlDBioKq6AJI28iQyDqsI3Y0OS7F9YXSvUzPP1mg-xxx（選填）">
+    <input type="tel" id="inp-phone" placeholder="09xx-xxx-xxx（選填）">
 
     <label>Line ID</label>
     <input type="text" id="inp-line" placeholder="@your_line_id（選填）">
@@ -231,6 +231,10 @@
       </div>
     </div>
 
+    <label style="margin-top: 20px;">收款人密碼 <span class="required-mark">*</span></label>
+    <input type="password" id="inp-pass" placeholder="請輸入收款人專屬密碼">
+    <div class="error-msg" id="err-pass">請輸入密碼</div>
+
     <button class="btn btn-confirm" id="confirm-btn" onclick="confirmDonation()">✓ 確認收款</button>
 
     <!-- 錯誤訊息區塊（注意：id="error-alert"，JS 裡用 errorAlert 變數，避開 window.alert 保留字） -->
@@ -267,7 +271,7 @@
   // ================================================================
   // ⚠️ 請修改以下兩個設定值
   // ================================================================
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgTPtGiebvDo0TYXLP_QXnQ8NOWm2dOMIsYcx3Dgrt3YzDm4431UjJAdsiq6BGo5XxUA/exec";
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx12wr6c-uQchVu7NNtESqYTy6bv6oc9WNFRbulpH1e_d9eJnt-yUWQy_PP9JHEjUCbCg/exec";
   const SHEET_VIEW_URL  = "https://docs.google.com/spreadsheets/d/1gzJ9GmofOYrO6EvDvpEDPDD2V9XB9w6CfkTomXpjoVA/edit?usp=sharing";
   // ================================================================
 
@@ -334,11 +338,20 @@
   //      正常情況下（包含 Apps Script 執行失敗）都會走 .then()。
   //   3. 修正變數名稱：改用 errorAlert，避開 window.alert 保留字衝突。
   //   4. 加上 10 秒 timeout 保護，避免 fetch 永遠 pending。
+  //   5. 送出前先在前端檢查密碼欄位不為空，再交由 Apps Script 後端比對。
   // ================================================================
   function confirmDonation() {
     const params     = new URLSearchParams(window.location.search);
     const btn        = document.getElementById("confirm-btn");
-    const errorAlert = document.getElementById("error-alert"); // ← 不用 alert 當變數名
+    const errorAlert = document.getElementById("error-alert");
+    const pass       = document.getElementById("inp-pass").value.trim();
+
+    // ── 前端：密碼不可為空 ──
+    document.getElementById("err-pass").style.display = "none";
+    if (!pass) {
+      document.getElementById("err-pass").style.display = "block";
+      return;
+    }
 
     btn.disabled    = true;
     btn.innerHTML   = '<span class="spinner"></span>寫入紀錄中…';
@@ -349,7 +362,8 @@
       + "&name="   + encodeURIComponent(params.get("name")   || "")
       + "&phone="  + encodeURIComponent(params.get("phone")  || "")
       + "&lineId=" + encodeURIComponent(params.get("line")   || "")
-      + "&amount=" + encodeURIComponent(params.get("amount") || "");
+      + "&amount=" + encodeURIComponent(params.get("amount") || "")
+      + "&pass="   + encodeURIComponent(pass); // ← 密碼交由後端比對
 
     // ── Timeout 保護：超過 10 秒視為失敗 ──
     const timeoutId = setTimeout(() => {
@@ -358,7 +372,8 @@
 
     // ── no-cors + GET：唯一能繞過 Apps Script CORS 限制的方式 ──
     // .then() 在 no-cors 下代表「請求已送達」（opaque response），不代表寫入成功。
-    // 若需確認寫入結果，請改用 Google Apps Script + JSONP 方案，或在後端加 CORS header。
+    // 密碼錯誤時 Apps Script 不會寫入，但前端無法得知回應內容（no-cors 限制）。
+    // 若需要讀取後端回傳的錯誤訊息，需改用 CORS 模式（須在 Apps Script 加 CORS header）。
     fetch(url, { method: "GET", mode: "no-cors" })
       .then(() => {
         clearTimeout(timeoutId);
