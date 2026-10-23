@@ -8,4 +8,4 @@
 - Folder：/ (root)
 - 點下 Save
 - 儲存後 GitHub 會生成一個網址，例如：
-    https://teeker.github.io/mysocks/index.html
+    https://teeker.github.io/myscript/index.html
